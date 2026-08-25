@@ -55,8 +55,15 @@ jobs:
           sed -i 's/^source.include_exts = .*/source.include_exts = py,db/' buildozer.spec
           sed -i 's/^orientation = .*/orientation = portrait/' buildozer.spec
 
-      - name: Install Android SDK and Build Tools
-        run: |
+       
+        
+       - name: Install Android SDK and Build Tools
+  run: |
+    export JAVA_HOME=/usr/lib/jvm/temurin-17-jdk-amd64
+    export PATH=$JAVA_HOME/bin:$PATH
+    java -version
+
+    # baaki tumhara existing code yahin rahega...
           mkdir -p "$HOME/.buildozer/android/platform/android-sdk"
 
           SDK="$HOME/.buildozer/android/platform/android-sdk"
