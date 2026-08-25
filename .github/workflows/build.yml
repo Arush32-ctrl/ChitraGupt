@@ -73,14 +73,19 @@ jobs:
           sed -i 's/^source.include_exts = .*/source.include_exts = py,db/' buildozer.spec
           sed -i 's/^orientation = .*/orientation = portrait/' buildozer.spec
 
+          echo "android.sdk_path = $ANDROID_HOME" >> buildozer.spec
+          echo "android.ndk_path = $ANDROID_NDK_HOME" >> buildozer.spec
 
-      - name: Buildozer configuration
+
+      - name: Check Android SDK
         run: |
-          mkdir -p ~/.buildozer/android/platform
-          ln -sfn "$ANDROID_HOME" ~/.buildozer/android/platform/android-sdk
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          echo "ANDROID_NDK_HOME=$ANDROID_NDK_HOME"
 
+          test -f "$ANDROID_HOME/build-tools/35.0.0/aidl"
 
-       
+          echo "AIDL found successfully"
+
 
       - name: Build APK
         run: |
