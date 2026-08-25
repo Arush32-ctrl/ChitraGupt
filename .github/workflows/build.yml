@@ -5,42 +5,28 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
 
     steps:
 
-      - name: Checkout
-        uses: actions/checkout@v4
-
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
-          python-version: "3.11"
+          python-version: "3.x"
 
-      - name: Install system dependencies
-        run: |
-          sudo apt update
-          sudo apt install -y \
-            build-essential \
-            git \
-            zip \
-            unzip \
-            openjdk-17-jdk \
-            autoconf \
-            libtool \
-            pkg-config \
-            zlib1g-dev \
-            libncurses5-dev \
-            libncursesw5-dev \
-            cmake \
-            libffi-dev \
-            libssl-dev
+      - name: Setup Java
+        uses: actions/setup-java@v5
+        with:
+          java-version: "17"
+          distribution: "temurin"
+
+      - name: Checkout
+        uses: actions/checkout@v7
 
       - name: Install Buildozer
         run: |
           python -m pip install --upgrade pip
           pip install buildozer
-          pip install cython
 
       - name: Create buildozer.spec
         run: |
@@ -54,51 +40,12 @@ jobs:
           sed -i 's/^requirements = .*/requirements = python3,kivy,sympy/' buildozer.spec
           sed -i 's/^source.include_exts = .*/source.include_exts = py,db/' buildozer.spec
           sed -i 's/^orientation = .*/orientation = portrait/' buildozer.spec
+          sed -i 's/# android.accept_sdk_license = False/android.accept_sdk_license = True/' buildozer.spec
 
-       
-        
-       - name: Install Android SDK and Build Tools run: |
-          export JAVA_HOME=/usr/lib/jvm/temurin-17-jdk-amd64
-          export PATH=$JAVA_HOME/bin:$PATH
-          java -version
-
-    # baaki tumhara existing code yahin rahega...
-          mkdir -p "$HOME/.buildozer/android/platform/android-sdk"
-
-          SDK="$HOME/.buildozer/android/platform/android-sdk"
-
-          wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
-
-          mkdir -p "$SDK/cmdline-tools"
-          unzip -q commandlinetools-linux-11076708_latest.zip -d "$SDK/cmdline-tools"
-
-          mv "$SDK/cmdline-tools/cmdline-tools" \
-             "$SDK/cmdline-tools/latest"
-
-          export PATH="$SDK/cmdline-tools/latest/bin:$PATH"
-
-          yes | sdkmanager --sdk_root="$SDK" --licenses
-
-          sdkmanager --sdk_root="$SDK" \
-            "platform-tools" \
-            "platforms;android-34" \
-            "build-tools;34.0.0"
-
-          echo "ANDROIDSDK=$SDK" >> "$GITHUB_ENV"
-          echo "ANDROID_HOME=$SDK" >> "$GITHUB_ENV"
-          echo "$SDK/cmdline-tools/latest/bin" >> "$GITHUB_PATH"
-
-      - name: Verify AIDL
+      - name: Install Linux dependencies
         run: |
-          SDK="$HOME/.buildozer/android/platform/android-sdk"
-
-          echo "Searching for AIDL..."
-
-          find "$SDK/build-tools" -name aidl -type f -print
-
-          test -f "$SDK/build-tools/34.0.0/aidl"
-
-          echo "AIDL FOUND"
+          sudo apt update
+          sudo apt install -y automake libltdl-dev
 
       - name: Build APK
         run: |
