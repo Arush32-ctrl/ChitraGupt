@@ -5,36 +5,21 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
 
       - name: Checkout
         uses: actions/checkout@v4
 
-
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
-
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-
-
-      - name: Install Android SDK
-        run: |
-          sdkmanager "platform-tools"
-          sdkmanager "platforms;android-35"
-          sdkmanager "build-tools;35.0.0"
-          yes | sdkmanager --licenses
-
-
       - name: Install system dependencies
         run: |
           sudo apt update
-
           sudo apt install -y \
             build-essential \
             git \
@@ -51,18 +36,15 @@ jobs:
             libffi-dev \
             libssl-dev
 
-
       - name: Install Buildozer
         run: |
           python -m pip install --upgrade pip
           pip install buildozer
           pip install cython
 
-
-      - name: Create Buildozer spec
+      - name: Create buildozer.spec
         run: |
           buildozer init
-
 
       - name: Configure Buildozer
         run: |
@@ -73,24 +55,48 @@ jobs:
           sed -i 's/^source.include_exts = .*/source.include_exts = py,db/' buildozer.spec
           sed -i 's/^orientation = .*/orientation = portrait/' buildozer.spec
 
-          echo "android.sdk_path = $ANDROID_HOME" >> buildozer.spec
-          echo "android.ndk_path = $ANDROID_NDK_HOME" >> buildozer.spec
-
-
-      - name: Check Android SDK
+      - name: Install Android SDK and Build Tools
         run: |
-          echo "ANDROID_HOME=$ANDROID_HOME"
-          echo "ANDROID_NDK_HOME=$ANDROID_NDK_HOME"
+          mkdir -p "$HOME/.buildozer/android/platform/android-sdk"
 
-          test -f "$ANDROID_HOME/build-tools/35.0.0/aidl"
+          SDK="$HOME/.buildozer/android/platform/android-sdk"
 
-          echo "AIDL found successfully"
+          wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
 
+          mkdir -p "$SDK/cmdline-tools"
+          unzip -q commandlinetools-linux-11076708_latest.zip -d "$SDK/cmdline-tools"
+
+          mv "$SDK/cmdline-tools/cmdline-tools" \
+             "$SDK/cmdline-tools/latest"
+
+          export PATH="$SDK/cmdline-tools/latest/bin:$PATH"
+
+          yes | sdkmanager --sdk_root="$SDK" --licenses
+
+          sdkmanager --sdk_root="$SDK" \
+            "platform-tools" \
+            "platforms;android-34" \
+            "build-tools;34.0.0"
+
+          echo "ANDROIDSDK=$SDK" >> "$GITHUB_ENV"
+          echo "ANDROID_HOME=$SDK" >> "$GITHUB_ENV"
+          echo "$SDK/cmdline-tools/latest/bin" >> "$GITHUB_PATH"
+
+      - name: Verify AIDL
+        run: |
+          SDK="$HOME/.buildozer/android/platform/android-sdk"
+
+          echo "Searching for AIDL..."
+
+          find "$SDK/build-tools" -name aidl -type f -print
+
+          test -f "$SDK/build-tools/34.0.0/aidl"
+
+          echo "AIDL FOUND"
 
       - name: Build APK
         run: |
           buildozer android debug
-
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
