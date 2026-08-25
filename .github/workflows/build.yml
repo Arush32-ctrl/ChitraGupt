@@ -57,11 +57,10 @@ jobs:
 
        
         
-       - name: Install Android SDK and Build Tools
-  run: |
-    export JAVA_HOME=/usr/lib/jvm/temurin-17-jdk-amd64
-    export PATH=$JAVA_HOME/bin:$PATH
-    java -version
+       - name: Install Android SDK and Build Tools run: |
+          export JAVA_HOME=/usr/lib/jvm/temurin-17-jdk-amd64
+          export PATH=$JAVA_HOME/bin:$PATH
+          java -version
 
     # baaki tumhara existing code yahin rahega...
           mkdir -p "$HOME/.buildozer/android/platform/android-sdk"
