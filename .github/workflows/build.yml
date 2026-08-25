@@ -80,12 +80,7 @@ jobs:
           ln -sfn "$ANDROID_HOME" ~/.buildozer/android/platform/android-sdk
 
 
-      - name: Check AIDL
-        run: |
-          echo "ANDROID_HOME=$ANDROID_HOME"
-          find "$ANDROID_HOME/build-tools" -name aidl -type f -print
-          "$ANDROID_HOME/build-tools/35.0.0/aidl" --version
-
+       
 
       - name: Build APK
         run: |
