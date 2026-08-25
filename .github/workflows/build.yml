@@ -23,7 +23,7 @@ jobs:
         uses: android-actions/setup-android@v3
 
 
-      - name: Install Android SDK packages
+      - name: Install Android SDK
         run: |
           sdkmanager "platform-tools"
           sdkmanager "platforms;android-35"
@@ -74,10 +74,17 @@ jobs:
           sed -i 's/^orientation = .*/orientation = portrait/' buildozer.spec
 
 
-      - name: Configure Android SDK path
+      - name: Buildozer configuration
         run: |
-          echo "ANDROIDSDK=$ANDROID_HOME" >> $GITHUB_ENV
-          echo "ANDROIDNDK=$ANDROID_NDK_HOME" >> $GITHUB_ENV
+          mkdir -p ~/.buildozer/android/platform
+          ln -sfn "$ANDROID_HOME" ~/.buildozer/android/platform/android-sdk
+
+
+      - name: Check AIDL
+        run: |
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          find "$ANDROID_HOME/build-tools" -name aidl -type f -print
+          "$ANDROID_HOME/build-tools/35.0.0/aidl" --version
 
 
       - name: Build APK
